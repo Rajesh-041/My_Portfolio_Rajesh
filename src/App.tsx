@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react'
 import Lenis from 'lenis'
 import LoadingSequence from './components/loader/LoadingSequence'
+import MorphingBlobNav from './components/MorphingBlobNav'
 import { hasSeenIntro, markIntroSeen } from './hooks/useIntroSession'
 import Hero from './sections/Hero'
 
@@ -190,56 +191,13 @@ export default function App() {
         aria-hidden="true"
       />
 
-      {/* Floating nav */}
-      <nav
-        style={{
-          position: 'fixed',
-          top: '1.5rem',
-          left: '50%',
-          transform: navVisible ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(-16px)',
-          zIndex: 500,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.15rem',
-          padding: '0.5rem 1.25rem',
-          background: 'rgba(10,10,10,0.85)',
-          border: '1px solid rgba(255,254,30,0.12)',
-          backdropFilter: 'blur(12px)',
-          opacity: navVisible ? 1 : 0,
-          transition: 'opacity 0.5s ease, transform 0.5s ease',
-          pointerEvents: navVisible ? 'all' : 'none',
-          overflowX: 'auto',
-          maxWidth: '96vw',
-        }}
-      >
-        {NAV_ITEMS.map((item) => (
-          <a
-            key={item.href}
-            href={item.href}
-            style={{
-              fontSize: '0.62rem',
-              letterSpacing: '0.12em',
-              color: active === item.href ? item.color : '#EAEAEA',
-              textDecoration: 'none',
-              padding: '0.35rem 0.65rem',
-              textTransform: 'uppercase',
-              transition: 'color 0.2s',
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-              opacity: active === item.href ? 1 : 0.85,
-              fontWeight: active === item.href ? 600 : 400,
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = item.color)}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = active === item.href ? item.color : '#EAEAEA'
-            }}
-            onClick={() => setActive(item.href)}
-            data-active={active === item.href}
-          >
-            {item.label}
-          </a>
-        ))}
-      </nav>
+      {/* Morphing Blob Navigation */}
+      <MorphingBlobNav
+        items={NAV_ITEMS}
+        active={active}
+        onSelect={setActive}
+        visible={navVisible}
+      />
 
       {/* Sections */}
       <main>

@@ -1,6 +1,6 @@
 import { useInView } from '../hooks/useInView'
 import { useRef, useState } from 'react'
-import Carousel3D from '../components/Carousel3D'
+import HolographicStack from '../components/HolographicStack'
 
 const skillGroups = [
   {
@@ -121,20 +121,15 @@ export default function Toolkit() {
           </h2>
         </div>
 
-        {/* Skill floating cards — 3D carousel */}
-        <div className="perspective-3d">
-          <Carousel3D
-            items={skillGroups}
-            accent="#3E8EF7"
-            radius={440}
-            cardWidth="min(66vw, 520px)"
-            height="min(58vh, 540px)"
-            minHeight={440}
-            dotColor={(_, i) => ['#3E8EF7', '#F2A93B', '#E339B5', '#30C1E2', '#FFFE1E'][i % 5]}
-            counterLabel={(c) => `${skillGroups[c].category} · ${c + 1}/${skillGroups.length}`}
-            render={(group, gi) => <SkillCard group={group} groupIndex={gi} />}
-          />
-        </div>
+        {/* Skill floating cards — holographic stack */}
+        <HolographicStack
+          items={skillGroups}
+          accent="#3E8EF7"
+          secondaryColor="#F2A93B"
+          render={(group, gi, isActive) => (
+            <SkillCard group={group} groupIndex={gi} isActive={isActive} />
+          )}
+        />
 
         {/* Core subjects — supporting line, not a card */}
         <div
@@ -156,9 +151,11 @@ export default function Toolkit() {
 function SkillCard({
   group,
   groupIndex,
+  isActive,
 }: {
   group: (typeof skillGroups)[0]
   groupIndex: number
+  isActive: boolean
 }) {
   const ref = useRef<HTMLDivElement>(null)
   const [tilt, setTilt] = useState({ x: 0, y: 0 })
@@ -178,23 +175,21 @@ function SkillCard({
       onMouseMove={handleMove}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => { setHover(false); setTilt({ x: 0, y: 0 }) }}
-      style={{ perspective: '1000px', width: '100%' }}
+      style={{ width: '100%' }}
     >
       <div
-        className={`card-edge will-3d ${float(groupIndex)}`}
         style={{
-          ['--edge-glow' as string]: `rgba(62,142,247,0.55)`,
-          border: `1px solid ${hover ? 'rgba(62,142,247,0.45)' : 'rgba(62,142,247,0.16)'}`,
+          border: `1px solid ${isActive || hover ? 'rgba(62,142,247,0.45)' : 'rgba(62,142,247,0.16)'}`,
           background: 'rgba(20,26,36,0.96)',
           backdropFilter: 'blur(6px)',
           borderRadius: '14px',
           padding: '1.9rem 1.9rem 1.5rem',
           minHeight: '180px',
-          boxShadow: hover ? `0 30px 50px -24px rgba(62,142,247,0.4)` : '0 18px 40px -28px rgba(0,0,0,0.7)',
+          boxShadow: isActive || hover ? `0 30px 50px -24px rgba(62,142,247,0.4)` : '0 18px 40px -28px rgba(0,0,0,0.7)',
           transform: hover
-            ? `translateZ(0) rotateY(${tilt.x}deg) rotateX(${tilt.y}deg) scale(1.05)`
+            ? `rotateY(${tilt.x}deg) rotateX(${tilt.y}deg) scale(1.02)`
             : 'none',
-          transformStyle: 'preserve-3d',
+          transition: 'transform 0.15s ease, border-color 0.3s, box-shadow 0.3s',
         }}
       >
         <p
@@ -207,7 +202,6 @@ function SkillCard({
             fontFamily: 'monospace',
             fontWeight: 600,
             marginBottom: '1.5rem',
-            transform: 'translateZ(30px)',
           }}
         >
           {group.category}
@@ -216,7 +210,6 @@ function SkillCard({
           {group.skills.map((skill, si) => (
             <span
               key={skill}
-              className={`float-fast ${si % 3 === 1 ? 'float-delay-1' : si % 3 === 2 ? 'float-delay-2' : ''}`}
               style={{
                 padding: '0.4rem 0.95rem',
                 background: 'rgba(62,142,247,0.10)',
@@ -225,8 +218,6 @@ function SkillCard({
                 color: '#DFE6EE',
                 fontFamily: 'monospace',
                 letterSpacing: '0.05em',
-                animationDelay: `${groupIndex * 0.2 + si * 0.12}s, ${groupIndex * 0.2 + si * 0.12}s`,
-                transform: 'translateZ(18px)',
               }}
             >
               {skill}
