@@ -133,6 +133,51 @@ export default function Hero() {
 
           {/* Visitor counter — small, neat, neon glow */}
           <VisitorCounter show={showContent} />
+
+          {/* Resume button */}
+          <a
+            href="/resume.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              marginTop: '1.8rem',
+              padding: '0.7rem 1.4rem',
+              border: '1px solid #FFFE1E44',
+              borderRadius: '999px',
+              fontSize: '0.7rem',
+              letterSpacing: '0.12em',
+              color: '#FFFE1E',
+              fontFamily: 'monospace',
+              textTransform: 'uppercase',
+              textDecoration: 'none',
+              background: 'rgba(255,254,30,0.08)',
+              transition: 'background 0.25s, border-color 0.25s, transform 0.2s, opacity 0.8s ease 1.3s, transform 0.8s ease 1.3s',
+              opacity: showContent ? 1 : 0,
+              transform: showContent ? 'translateY(0)' : 'translateY(20px)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255,254,30,0.18)'
+              e.currentTarget.style.borderColor = '#FFFE1E88'
+              e.currentTarget.style.transform = 'translateY(-2px)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(255,254,30,0.08)'
+              e.currentTarget.style.borderColor = '#FFFE1E44'
+              e.currentTarget.style.transform = 'translateY(0)'
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+              <polyline points="10 9 9 9 8 9" />
+            </svg>
+            View Resume
+          </a>
         </div>
       </div>
 
