@@ -126,8 +126,6 @@ export default function Toolkit() {
           <Carousel3D
             items={skillGroups}
             accent="#3E8EF7"
-            autoStartMs={15000}
-            autoRotateMs={5000}
             radius={440}
             cardWidth="min(66vw, 520px)"
             height="min(58vh, 540px)"
