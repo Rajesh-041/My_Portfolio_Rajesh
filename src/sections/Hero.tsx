@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import VisitorCounter from '../components/VisitorCounter'
+
 
 const NAME = 'MUTHU RAJESH T'
 
@@ -124,8 +124,6 @@ export default function Hero() {
           >
             AI Engineer&nbsp;&nbsp;·&nbsp;&nbsp;Full Stack Developer&nbsp;&nbsp;·&nbsp;&nbsp;still learning, still building
           </p>
-
-          <VisitorCounter show={showContent} />
 
           <a
             href="/resume.pdf"
