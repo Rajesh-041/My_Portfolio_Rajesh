@@ -1,16 +1,18 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, lazy, Suspense } from 'react'
 import Lenis from 'lenis'
-import CinematicBackground from './components/CinematicBackground'
 import LoadingSequence from './components/loader/LoadingSequence'
 import { hasSeenIntro, markIntroSeen } from './hooks/useIntroSession'
 import Hero from './sections/Hero'
-import Backstory from './sections/Backstory'
-import Projects from './sections/Projects'
-import Toolkit from './sections/Toolkit'
-import GuestAppearances from './sections/GuestAppearances'
-import Recognition from './sections/Recognition'
-import BehindScenes from './sections/BehindScenes'
-import Contact from './sections/Contact'
+
+// Lazy-load heavy sections after the initial paint
+const CinematicBackground = lazy(() => import('./components/CinematicBackground'))
+const Backstory = lazy(() => import('./sections/Backstory'))
+const Projects = lazy(() => import('./sections/Projects'))
+const Toolkit = lazy(() => import('./sections/Toolkit'))
+const GuestAppearances = lazy(() => import('./sections/GuestAppearances'))
+const Recognition = lazy(() => import('./sections/Recognition'))
+const BehindScenes = lazy(() => import('./sections/BehindScenes'))
+const Contact = lazy(() => import('./sections/Contact'))
 
 const NAV_ITEMS = [
   { label: 'Credits', href: '#hero', color: '#FFFE1E' },
@@ -156,7 +158,9 @@ export default function App() {
       )}
 
       {/* Cinematic 3D WebGL backdrop */}
-      <CinematicBackground />
+      <Suspense fallback={null}>
+        <CinematicBackground />
+      </Suspense>
 
       {/* Film grain */}
       <svg className="grain-svg" aria-hidden="true">
@@ -240,13 +244,15 @@ export default function App() {
       {/* Sections */}
       <main>
         <Hero />
-        <Backstory />
-        <Projects />
-        <Toolkit />
-        <GuestAppearances />
-        <Recognition />
-        <BehindScenes />
-        <Contact />
+        <Suspense fallback={null}>
+          <Backstory />
+          <Projects />
+          <Toolkit />
+          <GuestAppearances />
+          <Recognition />
+          <BehindScenes />
+          <Contact />
+        </Suspense>
       </main>
     </>
   )
