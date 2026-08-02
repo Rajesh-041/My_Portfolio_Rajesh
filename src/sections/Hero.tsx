@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import VisitorCounter from '../components/VisitorCounter'
-import ParticleDistortion from '../components/ParticleDistortion'
+import TextParticleDistortion from '../components/TextParticleDistortion'
 
 const NAME = 'MUTHU RAJESH T'
 
@@ -86,8 +86,17 @@ export default function Hero() {
             "Now showing"
           </p>
 
-          {/* Name — interactive kinetic typography distortion */}
-          <KineticName text={NAME} show={showContent} />
+          {/* Name — particle distortion */}
+          <TextParticleDistortion
+            text={NAME}
+            fontSize={120}
+            fontFamily="Anton, sans-serif"
+            color="#FFFE1E"
+            scatterRadius={130}
+            scatterForce={8}
+            returnSpeed={0.04}
+            samplingGap={3}
+          />
 
           {/* Divider line */}
           <div
@@ -224,149 +233,6 @@ export default function Hero() {
         }}
       />
     </section>
-  )
-}
-
-/* Interactive Kinetic Typography Distortion — letters stretch, wave and tilt
-   into/away from the cursor in real time. */
-function KineticName({ text, show }: { text: string; show: boolean }) {
-  const [revealed, setRevealed] = useState(false)
-  const charRefs = useRef<(HTMLSpanElement | null)[]>([])
-  const last = useRef({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
-  const momentum = useRef({ x: 0, y: 0 })
-  const rafRef = useRef(0)
-  const revealRef = useRef<number>(0)
-
-  // Reveal delay = stagger (45ms per char) + settle
-  useEffect(() => {
-    if (!show) return
-    revealRef.current = window.setTimeout(() => setRevealed(true), text.length * 45 + 700)
-    return () => clearTimeout(revealRef.current)
-  }, [show, text.length])
-
-  // Movement-driven distortion — letters only react while the pointer is moving,
-  // then ease back to rest. When the mouse is idle the name sits perfectly still.
-  useEffect(() => {
-    if (!revealed) return
-
-    const onMove = (e: PointerEvent) => {
-      const dx = e.clientX - last.current.x
-      const dy = e.clientY - last.current.y
-      last.current.x = e.clientX
-      last.current.y = e.clientY
-      // Tag the letters with the instantaneous pointer velocity
-      momentum.current.x = dx * 0.5
-      momentum.current.y = dy * 0.5
-    }
-
-    const loop = () => {
-      // Fast decay → the distortion springs out and settles to rest
-      momentum.current.x *= 0.72
-      momentum.current.y *= 0.72
-      const m = Math.hypot(momentum.current.x, momentum.current.y)
-
-      if (m < 0.05) {
-        taraf()
-        rafRef.current = requestAnimationFrame(loop)
-        return
-      }
-
-      const pullX = momentum.current.x * 0.9
-      const tiltX = momentum.current.y * -0.5
-      const tiltY = momentum.current.x * 0.4
-      const skX = momentum.current.x * 0.005
-      const stretch = 1 + m * 0.004
-
-      charRefs.current.forEach((el) => {
-        if (!el) return
-        el.style.transition = 'transform 0.06s linear, color 0.1s'
-        el.style.transform =
-          `translate3d(${pullX}px, ${momentum.current.y}px, 0) ` +
-          `rotateX(${tiltX}deg) rotateY(${tiltY}deg) skewX(${skX}deg) scale(${stretch})`
-        el.style.color = m > 1 ? '#FFFE1E' : '#F5F5F5'
-      })
-
-      rafRef.current = requestAnimationFrame(loop)
-    }
-
-    // Reset every letter back to its natural, still state
-    const taraf = () => {
-      charRefs.current.forEach((el) => {
-        if (!el) return
-        el.style.transition = 'transform 0.12s ease, color 0.12s'
-        el.style.transform = ''
-        el.style.color = ''
-      })
-    }
-
-    window.addEventListener('pointermove', onMove)
-    rafRef.current = requestAnimationFrame(loop)
-    return () => {
-      window.removeEventListener('pointermove', onMove)
-      cancelAnimationFrame(rafRef.current)
-      momentum.current.x = momentum.current.y = 0
-      taraf()
-    }
-  }, [revealed])
-
-  return (
-    <div
-      className={`display-font name-container glow-name ${revealed ? 'kinematized' : ''}`}
-      style={{
-        position: 'relative',
-        fontSize: 'clamp(2.8rem, 9vw, 8.5rem)',
-        lineHeight: 1,
-        color: '#F5F5F5',
-        marginBottom: '1.4rem',
-        letterSpacing: '0.01em',
-        whiteSpace: 'nowrap',
-        willChange: 'transform',
-      }}
-    >
-      {/* Particle distortion layer */}
-      {revealed && (
-        <div style={{ position: 'absolute', inset: '-20px -40px', pointerEvents: 'none', zIndex: 2 }}>
-          <ParticleDistortion
-            width={900}
-            height={140}
-            particleCount={280}
-            color="#FFFE1E"
-            scatterRadius={130}
-            scatterForce={7}
-            returnSpeed={0.04}
-          />
-        </div>
-      )}
-
-      <h1
-        style={{
-          position: 'relative',
-          zIndex: 3,
-          fontSize: 'inherit',
-          lineHeight: 'inherit',
-          color: 'inherit',
-          margin: 0,
-          letterSpacing: 'inherit',
-          whiteSpace: 'inherit',
-        }}
-      >
-        {text.split('').map((char, i) => (
-          <span
-            key={i}
-            ref={(el) => { charRefs.current[i] = el }}
-            className="film-char"
-            style={{
-              animationDelay: `${i * 45}ms`,
-              display: 'inline-block',
-              width: char === ' ' ? '0.34em' : undefined,
-              willChange: 'transform, color',
-            }}
-          >
-            {char === ' ' ? '\u00A0' : char}
-          </span>
-        ))}
-      </h1>
-    </div>
   )
 }
 
