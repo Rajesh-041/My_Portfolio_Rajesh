@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import VisitorCounter from '../components/VisitorCounter'
+import ParticleDistortion from '../components/ParticleDistortion'
 
 const NAME = 'MUTHU RAJESH T'
 
@@ -309,9 +310,10 @@ function KineticName({ text, show }: { text: string; show: boolean }) {
   }, [revealed])
 
   return (
-    <h1
+    <div
       className={`display-font name-container glow-name ${revealed ? 'kinematized' : ''}`}
       style={{
+        position: 'relative',
         fontSize: 'clamp(2.8rem, 9vw, 8.5rem)',
         lineHeight: 1,
         color: '#F5F5F5',
@@ -321,22 +323,50 @@ function KineticName({ text, show }: { text: string; show: boolean }) {
         willChange: 'transform',
       }}
     >
-      {text.split('').map((char, i) => (
-        <span
-          key={i}
-          ref={(el) => { charRefs.current[i] = el }}
-          className="film-char"
-          style={{
-            animationDelay: `${i * 45}ms`,
-            display: 'inline-block',
-            width: char === ' ' ? '0.34em' : undefined,
-            willChange: 'transform, color',
-          }}
-        >
-          {char === ' ' ? '\u00A0' : char}
-        </span>
-      ))}
-    </h1>
+      {/* Particle distortion layer */}
+      {revealed && (
+        <div style={{ position: 'absolute', inset: '-20px -40px', pointerEvents: 'none', zIndex: 2 }}>
+          <ParticleDistortion
+            width={900}
+            height={140}
+            particleCount={280}
+            color="#FFFE1E"
+            scatterRadius={130}
+            scatterForce={7}
+            returnSpeed={0.04}
+          />
+        </div>
+      )}
+
+      <h1
+        style={{
+          position: 'relative',
+          zIndex: 3,
+          fontSize: 'inherit',
+          lineHeight: 'inherit',
+          color: 'inherit',
+          margin: 0,
+          letterSpacing: 'inherit',
+          whiteSpace: 'inherit',
+        }}
+      >
+        {text.split('').map((char, i) => (
+          <span
+            key={i}
+            ref={(el) => { charRefs.current[i] = el }}
+            className="film-char"
+            style={{
+              animationDelay: `${i * 45}ms`,
+              display: 'inline-block',
+              width: char === ' ' ? '0.34em' : undefined,
+              willChange: 'transform, color',
+            }}
+          >
+            {char === ' ' ? '\u00A0' : char}
+          </span>
+        ))}
+      </h1>
+    </div>
   )
 }
 
