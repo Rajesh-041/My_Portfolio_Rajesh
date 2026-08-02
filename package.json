@@ -10,7 +10,6 @@
     "format": "oxfmt"
   },
   "dependencies": {
-    "firebase": "^12.17.0",
     "lenis": "^1.3.25",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
