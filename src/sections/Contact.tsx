@@ -1,5 +1,140 @@
 import { useInView } from '../hooks/useInView'
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
+
+function ContactParticleField() {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    let w = window.innerWidth
+    let h = window.innerHeight
+    const dpr = Math.min(window.devicePixelRatio || 1, 2)
+    canvas.width = w * dpr
+    canvas.height = h * dpr
+    ctx.scale(dpr, dpr)
+
+    const PARTICLE_COUNT = 150
+    const SCATTER_RADIUS = 120
+    const SCATTER_FORCE = 4
+    const RETURN_SPEED = 0.025
+
+    type P = {
+      ox: number; oy: number
+      x: number; y: number
+      vx: number; vy: number
+      size: number
+      alpha: number
+      hue: number
+    }
+
+    const particles: P[] = []
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      const ox = Math.random() * w
+      const oy = Math.random() * h
+      particles.push({
+        ox, oy,
+        x: ox, y: oy,
+        vx: 0, vy: 0,
+        size: Math.random() * 1.5 + 0.4,
+        alpha: Math.random() * 0.35 + 0.05,
+        hue: Math.random() < 0.5 ? 52 : 185, // gold / cyan
+      })
+    }
+
+    let mouse = { x: -999, y: -999 }
+    let raf = 0
+    let fadeIn = 0
+
+    const onMove = (e: PointerEvent) => {
+      const rect = canvas.getBoundingClientRect()
+      mouse.x = e.clientX - rect.left
+      mouse.y = e.clientY - rect.top
+    }
+    const onLeave = () => { mouse.x = -999; mouse.y = -999 }
+
+    window.addEventListener('pointermove', onMove)
+    canvas.addEventListener('pointerleave', onLeave)
+
+    const animate = () => {
+      ctx.clearRect(0, 0, w, h)
+      fadeIn = Math.min(1, fadeIn + 0.006)
+
+      for (const p of particles) {
+        const dx = p.x - mouse.x
+        const dy = p.y - mouse.y
+        const dist = Math.hypot(dx, dy)
+
+        if (dist < SCATTER_RADIUS && dist > 0) {
+          const force = (1 - dist / SCATTER_RADIUS) * SCATTER_FORCE
+          p.vx += (dx / dist) * force
+          p.vy += (dy / dist) * force
+        }
+
+        p.vx += (p.ox - p.x) * RETURN_SPEED
+        p.vy += (p.oy - p.y) * RETURN_SPEED
+        p.vx *= 0.9
+        p.vy *= 0.9
+        p.x += p.vx
+        p.y += p.vy
+
+        const speed = Math.hypot(p.vx, p.vy)
+        const a = fadeIn * (p.alpha + speed * 0.04)
+
+        if (p.hue === 52) {
+          ctx.fillStyle = `rgba(255,254,30,${a})`
+        } else {
+          ctx.fillStyle = `hsla(${p.hue},80%,65%,${a})`
+        }
+        ctx.shadowBlur = 4 + speed * 1.5
+        ctx.shadowColor = p.hue === 52 ? '#FFFE1E' : `hsl(${p.hue},80%,65%)`
+
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, p.size + speed * 0.05, 0, Math.PI * 2)
+        ctx.fill()
+      }
+
+      ctx.shadowBlur = 0
+      raf = requestAnimationFrame(animate)
+    }
+
+    raf = requestAnimationFrame(animate)
+
+    const onResize = () => {
+      w = window.innerWidth
+      h = window.innerHeight
+      canvas.width = w * dpr
+      canvas.height = h * dpr
+      ctx.setTransform(1, 0, 0, 1, 0, 0)
+      ctx.scale(dpr, dpr)
+    }
+    window.addEventListener('resize', onResize)
+
+    return () => {
+      cancelAnimationFrame(raf)
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('resize', onResize)
+      canvas.removeEventListener('pointerleave', onLeave)
+    }
+  }, [])
+
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{
+        position: 'absolute',
+        inset: 0,
+        width: '100%',
+        height: '100%',
+        pointerEvents: 'none',
+        zIndex: 1,
+      }}
+    />
+  )
+}
 
 const links = [
   {
@@ -91,6 +226,7 @@ export default function Contact() {
       id="contact"
       style={{ background: '#0A0A0ACC', position: 'relative', overflow: 'hidden' }}
     >
+      <ContactParticleField />
       {/* Final spot from above */}
       <div
         style={{

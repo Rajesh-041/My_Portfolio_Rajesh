@@ -51,7 +51,7 @@ export default function Hero() {
         overflow: 'hidden',
       }}
     >
-      <Particles parallax={parallax} />
+      <Particles parallax={parallax} count={150} />
 
       {/* Particle distortion field — particles scatter on cursor */}
       <HeroParticleField />
@@ -320,10 +320,10 @@ function KineticName({ text, show }: { text: string; show: boolean }) {
   )
 }
 
-function Particles({ parallax }: { parallax: { x: number; y: number } }) {
+function Particles({ parallax, count = 60 }: { parallax: { x: number; y: number }; count?: number }) {
   return (
     <div className="perspective-3d" style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
-      {Array.from({ length: 60 }).map((_, i) => {
+      {Array.from({ length: count }).map((_, i) => {
         const x = Math.random() * 100
         const y = Math.random() * 100
         const size = Math.random() * 2 + 0.5
@@ -369,7 +369,7 @@ function HeroParticleField() {
     canvas.height = h * dpr
     ctx.scale(dpr, dpr)
 
-    const PARTICLE_COUNT = 200
+    const PARTICLE_COUNT = 400
     const SCATTER_RADIUS = 140
     const SCATTER_FORCE = 6
     const RETURN_SPEED = 0.03
