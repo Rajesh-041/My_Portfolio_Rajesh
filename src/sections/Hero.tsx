@@ -127,8 +127,7 @@ export default function Hero() {
 
           <a
             href="/resume.pdf"
-            target="_blank"
-            rel="noopener noreferrer"
+            download="Muthu_Rajesh_Resume.pdf"
             className="visitor-chip"
             style={{
               display: 'inline-flex',
