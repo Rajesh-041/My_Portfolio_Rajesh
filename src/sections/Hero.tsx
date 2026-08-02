@@ -53,6 +53,9 @@ export default function Hero() {
     >
       <Particles parallax={parallax} />
 
+      {/* Particle distortion field — particles scatter on cursor */}
+      <HeroParticleField />
+
       <div className="light-leak" />
 
       <div className="perspective-3d preserve-3d" style={{ position: 'relative', zIndex: 10, width: '100%', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
@@ -349,5 +352,140 @@ function Particles({ parallax }: { parallax: { x: number; y: number } }) {
         )
       })}
     </div>
+  )
+}
+
+function HeroParticleField() {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    let w = window.innerWidth
+    let h = window.innerHeight
+    const dpr = Math.min(window.devicePixelRatio || 1, 2)
+    canvas.width = w * dpr
+    canvas.height = h * dpr
+    ctx.scale(dpr, dpr)
+
+    const PARTICLE_COUNT = 200
+    const SCATTER_RADIUS = 140
+    const SCATTER_FORCE = 6
+    const RETURN_SPEED = 0.03
+
+    type P = {
+      ox: number; oy: number
+      x: number; y: number
+      vx: number; vy: number
+      size: number
+      alpha: number
+      hue: number
+    }
+
+    const particles: P[] = []
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      const ox = Math.random() * w
+      const oy = Math.random() * h
+      particles.push({
+        ox, oy,
+        x: ox, y: oy,
+        vx: 0, vy: 0,
+        size: Math.random() * 2 + 0.6,
+        alpha: Math.random() * 0.45 + 0.08,
+        hue: Math.random() < 0.4 ? 52 : Math.random() < 0.7 ? 185 : 0, // gold / cyan / white
+      })
+    }
+
+    let mouse = { x: -999, y: -999 }
+    let raf = 0
+    let fadeIn = 0
+
+    const onMove = (e: PointerEvent) => {
+      const rect = canvas.getBoundingClientRect()
+      mouse.x = e.clientX - rect.left
+      mouse.y = e.clientY - rect.top
+    }
+    const onLeave = () => { mouse.x = -999; mouse.y = -999 }
+
+    window.addEventListener('pointermove', onMove)
+    canvas.addEventListener('pointerleave', onLeave)
+
+    const animate = () => {
+      ctx.clearRect(0, 0, w, h)
+      fadeIn = Math.min(1, fadeIn + 0.008)
+
+      for (const p of particles) {
+        const dx = p.x - mouse.x
+        const dy = p.y - mouse.y
+        const dist = Math.hypot(dx, dy)
+
+        if (dist < SCATTER_RADIUS && dist > 0) {
+          const force = (1 - dist / SCATTER_RADIUS) * SCATTER_FORCE
+          p.vx += (dx / dist) * force
+          p.vy += (dy / dist) * force
+        }
+
+        p.vx += (p.ox - p.x) * RETURN_SPEED
+        p.vy += (p.oy - p.y) * RETURN_SPEED
+        p.vx *= 0.88
+        p.vy *= 0.88
+        p.x += p.vx
+        p.y += p.vy
+
+        const speed = Math.hypot(p.vx, p.vy)
+        const a = fadeIn * (p.alpha + speed * 0.05)
+
+        if (p.hue === 0) {
+          ctx.fillStyle = `rgba(245,245,245,${a})`
+        } else {
+          ctx.fillStyle = `hsla(${p.hue},80%,65%,${a})`
+        }
+        ctx.shadowBlur = 6 + speed * 2
+        ctx.shadowColor = p.hue === 0 ? '#fff' : `hsl(${p.hue},80%,65%)`
+
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, p.size + speed * 0.06, 0, Math.PI * 2)
+        ctx.fill()
+      }
+
+      ctx.shadowBlur = 0
+      raf = requestAnimationFrame(animate)
+    }
+
+    raf = requestAnimationFrame(animate)
+
+    const onResize = () => {
+      w = window.innerWidth
+      h = window.innerHeight
+      canvas.width = w * dpr
+      canvas.height = h * dpr
+      ctx.setTransform(1, 0, 0, 1, 0, 0)
+      ctx.scale(dpr, dpr)
+    }
+    window.addEventListener('resize', onResize)
+
+    return () => {
+      cancelAnimationFrame(raf)
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('resize', onResize)
+      canvas.removeEventListener('pointerleave', onLeave)
+    }
+  }, [])
+
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{
+        position: 'absolute',
+        inset: 0,
+        width: '100%',
+        height: '100%',
+        pointerEvents: 'none',
+        zIndex: 2,
+      }}
+    />
   )
 }
