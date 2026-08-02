@@ -77,7 +77,8 @@ export default function Projects() {
         <Carousel3D
           items={projects}
           accent="#FFFE1E"
-          autoMs={5000}
+          autoStartMs={15000}
+          autoRotateMs={5000}
           radius={470}
           cardWidth="min(74vw, 560px)"
           height="min(70vh, 660px)"

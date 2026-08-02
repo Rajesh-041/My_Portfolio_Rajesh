@@ -1,20 +1,21 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import type { ReactNode, CSSProperties } from 'react'
 
 type Carousel3DProps<T> = {
   items: ReadonlyArray<T>
-  /** Renders the interior card for one face. the tools to read `active` if needed. */
   render: (item: T, index: number) => ReactNode
   accent?: string
   radius?: number
   cardWidth?: string
-  /** Auto-advance every `autoMs` ms; pauses while hovering. */
-  autoMs: number
   dotColor?: (item: T, index: number) => string
   counterLabel?: (index: number) => string
   height?: string
   minHeight?: number
   showArrows?: boolean
+  /** Milliseconds of inactivity before auto-rotation starts. Default 15000 (15s). */
+  autoStartMs?: number
+  /** Milliseconds between auto-rotation steps once started. Default 4000 (4s). */
+  autoRotateMs?: number
 }
 
 export default function Carousel3D<T>({
@@ -23,37 +24,89 @@ export default function Carousel3D<T>({
   accent = '#FFFE1E',
   radius = 470,
   cardWidth = 'min(54vw, 480px)',
-  autoMs,
   dotColor,
   counterLabel,
   height = 'min(60vh, 560px)',
   minHeight = 440,
   showArrows = true,
+  autoStartMs = 15000,
+  autoRotateMs = 4000,
 }: Carousel3DProps<T>) {
   const count = items.length
   const step = 360 / count
   const [current, setCurrent] = useState(0)
-  const dragStart = useRef<number | null>(null)
 
+  // Refs for timers and interaction state
+  const autoRotateTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const inactivityTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const isAutoRotatingRef = useRef(false)
+
+  // Clear all timers
+  const clearAllTimers = useCallback(() => {
+    if (autoRotateTimerRef.current) {
+      clearInterval(autoRotateTimerRef.current)
+      autoRotateTimerRef.current = null
+    }
+    if (inactivityTimerRef.current) {
+      clearTimeout(inactivityTimerRef.current)
+      inactivityTimerRef.current = null
+    }
+    isAutoRotatingRef.current = false
+  }, [])
+
+  // Start the inactivity timer (after user interaction stops)
+  const startInactivityTimer = useCallback(() => {
+    if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current)
+    inactivityTimerRef.current = setTimeout(() => {
+      // Start auto-rotation
+      isAutoRotatingRef.current = true
+      autoRotateTimerRef.current = setInterval(() => {
+        setCurrent((c) => (c + 1) % count)
+      }, autoRotateMs)
+    }, autoStartMs)
+  }, [autoStartMs, autoRotateMs, count])
+
+  // Handle any user interaction - stop auto-rotation, reset inactivity timer
+  const onInteraction = useCallback(() => {
+    if (isAutoRotatingRef.current) {
+      clearAllTimers()
+    }
+    startInactivityTimer()
+  }, [clearAllTimers, startInactivityTimer])
+
+  // Initialize: start inactivity timer on mount
   useEffect(() => {
-    if (!autoMs) return
-    const id = setInterval(() => setCurrent((c) => (c + 1) % count), autoMs)
-    return () => clearInterval(id)
-  }, [autoMs, count])
+    startInactivityTimer()
+    return () => clearAllTimers()
+  }, [startInactivityTimer, clearAllTimers])
 
-  const go = (dir: number) => setCurrent((c) => (c + dir + count) % count)
+  const go = useCallback((dir: number) => {
+    setCurrent((c) => (c + dir + count) % count)
+    onInteraction()
+  }, [count, onInteraction])
 
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    dragStart.current = e.clientX
+    e.currentTarget.setPointerCapture(e.pointerId)
   }
   const onPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (dragStart.current === null) return
-    const dx = e.clientX - dragStart.current
-    dragStart.current = null
-    if (Math.abs(dx) > 40) go(dx > 0 ? 1 : -1)
+    const target = e.currentTarget
+    if (!target.hasPointerCapture(e.pointerId)) return
+    target.releasePointerCapture(e.pointerId)
+    // Handle swipe
+    const dragStart = target.dataset.dragStart
+    if (dragStart !== undefined) {
+      const dx = e.clientX - Number(dragStart)
+      if (Math.abs(dx) > 40) go(dx > 0 ? 1 : -1)
+      delete target.dataset.dragStart
+    }
+  }
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.buttons === 1) {
+      e.currentTarget.dataset.dragStart ??= String(e.clientX)
+    }
   }
   const cancelDrag = () => {
-    dragStart.current = null
+    // Just reset drag state
   }
 
   const dot = (i: number) => (dotColor ? dotColor(items[i], i) : accent)
@@ -107,7 +160,13 @@ export default function Carousel3D<T>({
       <div
         onPointerDown={onPointerDown}
         onPointerUp={onPointerUp}
+        onPointerMove={onPointerMove}
         onPointerLeave={cancelDrag}
+        onPointerCancel={cancelDrag}
+        onTouchStart={(e) => onPointerDown(e as unknown as React.PointerEvent<HTMLDivElement>)}
+        onTouchEnd={(e) => onPointerUp(e as unknown as React.PointerEvent<HTMLDivElement>)}
+        onTouchMove={(e) => onPointerMove(e as unknown as React.PointerEvent<HTMLDivElement>)}
+        onTouchCancel={cancelDrag}
         style={{
           position: 'relative',
           perspective: '1600px',
@@ -148,7 +207,7 @@ export default function Carousel3D<T>({
                 }}
               >
                 <div
-                  onClick={() => !active && setCurrent(i)}
+                  onClick={() => !active && (setCurrent(i), onInteraction())}
                   style={{
                     opacity: active ? 1 : Math.max(0.35, 1 - depth * 0.18),
                     filter: `blur(${active ? 0 : depth * 1.2}px)`,
@@ -183,7 +242,7 @@ export default function Carousel3D<T>({
             <button
               key={i}
               aria-label={`Go to slide ${i + 1}`}
-              onClick={() => setCurrent(i)}
+              onClick={() => { setCurrent(i); onInteraction(); }}
               style={{
                 width: current === i ? '22px' : '8px',
                 height: '8px',

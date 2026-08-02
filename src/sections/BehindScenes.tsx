@@ -60,7 +60,8 @@ export default function BehindScenes() {
           <Carousel3D
             items={hobbies}
             accent="#F2A93B"
-            autoMs={5000}
+            autoStartMs={15000}
+            autoRotateMs={5000}
             radius={470}
             cardWidth="min(74vw, 480px)"
             height="min(62vh, 560px)"
