@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 import VisitorCounter from '../components/VisitorCounter'
-import TextParticleDistortion from '../components/TextParticleDistortion'
 
 const NAME = 'MUTHU RAJESH T'
 
@@ -11,13 +10,11 @@ export default function Hero() {
   const frame = useRef(0)
 
   useEffect(() => {
-    // Entrance runs immediately on mount, hidden behind the loader until it fades
     const t1 = setTimeout(() => setFlickerDone(true), 300)
     const t2 = setTimeout(() => setShowContent(true), 1200)
     return () => { clearTimeout(t1); clearTimeout(t2) }
   }, [])
 
-  // Cinematic 3D mouse-parallax across the hero scene
   useEffect(() => {
     const target = { x: 0, y: 0 }
     const current = { x: 0, y: 0 }
@@ -56,10 +53,8 @@ export default function Hero() {
     >
       <Particles parallax={parallax} />
 
-      {/* Light leak on entry */}
       <div className="light-leak" />
 
-      {/* Center content — layered on a 3D parallax stage */}
       <div className="perspective-3d preserve-3d" style={{ position: 'relative', zIndex: 10, width: '100%', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
         <div
           style={{
@@ -70,7 +65,6 @@ export default function Hero() {
             transition: 'transform 0.15s linear',
           }}
         >
-          {/* "Now Showing" script label */}
           <p
             className="chapter-label"
             style={{
@@ -86,19 +80,8 @@ export default function Hero() {
             "Now showing"
           </p>
 
-          {/* Name — particle distortion */}
-          <TextParticleDistortion
-            text={NAME}
-            fontSize={120}
-            fontFamily="Anton, sans-serif"
-            color="#FFFE1E"
-            scatterRadius={130}
-            scatterForce={8}
-            returnSpeed={0.04}
-            samplingGap={3}
-          />
+          <KineticName text={NAME} show={showContent} />
 
-          {/* Divider line */}
           <div
             style={{
               width: '100%',
@@ -110,7 +93,6 @@ export default function Hero() {
             }}
           />
 
-          {/* Subtitle */}
           <p
             className="display-font"
             style={{
@@ -127,7 +109,6 @@ export default function Hero() {
             Building intelligent systems through thoughtful engineering.
           </p>
 
-          {/* Role line */}
           <p
             style={{
               fontSize: 'clamp(0.8rem, 1.8vw, 1rem)',
@@ -141,10 +122,8 @@ export default function Hero() {
             AI Engineer&nbsp;&nbsp;·&nbsp;&nbsp;Full Stack Developer&nbsp;&nbsp;·&nbsp;&nbsp;still learning, still building
           </p>
 
-          {/* Visitor counter — small, neat, neon glow */}
           <VisitorCounter show={showContent} />
 
-          {/* Resume button — same chip style as VisitorCounter */}
           <a
             href="/resume.pdf"
             target="_blank"
@@ -197,7 +176,6 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* Scroll cue */}
       <div
         className="scroll-bounce"
         style={{
@@ -220,7 +198,6 @@ export default function Hero() {
         </svg>
       </div>
 
-      {/* Bottom gradient fade to next section */}
       <div
         style={{
           position: 'absolute',
@@ -233,6 +210,112 @@ export default function Hero() {
         }}
       />
     </section>
+  )
+}
+
+function KineticName({ text, show }: { text: string; show: boolean }) {
+  const [revealed, setRevealed] = useState(false)
+  const charRefs = useRef<(HTMLSpanElement | null)[]>([])
+  const last = useRef({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
+  const momentum = useRef({ x: 0, y: 0 })
+  const rafRef = useRef(0)
+  const revealRef = useRef<number>(0)
+
+  useEffect(() => {
+    if (!show) return
+    revealRef.current = window.setTimeout(() => setRevealed(true), text.length * 45 + 700)
+    return () => clearTimeout(revealRef.current)
+  }, [show, text.length])
+
+  useEffect(() => {
+    if (!revealed) return
+
+    const onMove = (e: PointerEvent) => {
+      const dx = e.clientX - last.current.x
+      const dy = e.clientY - last.current.y
+      last.current.x = e.clientX
+      last.current.y = e.clientY
+      momentum.current.x = dx * 0.5
+      momentum.current.y = dy * 0.5
+    }
+
+    const loop = () => {
+      momentum.current.x *= 0.72
+      momentum.current.y *= 0.72
+      const m = Math.hypot(momentum.current.x, momentum.current.y)
+
+      if (m < 0.05) {
+        taraf()
+        rafRef.current = requestAnimationFrame(loop)
+        return
+      }
+
+      const pullX = momentum.current.x * 0.9
+      const tiltX = momentum.current.y * -0.5
+      const tiltY = momentum.current.x * 0.4
+      const skX = momentum.current.x * 0.005
+      const stretch = 1 + m * 0.004
+
+      charRefs.current.forEach((el) => {
+        if (!el) return
+        el.style.transition = 'transform 0.06s linear, color 0.1s'
+        el.style.transform =
+          `translate3d(${pullX}px, ${momentum.current.y}px, 0) ` +
+          `rotateX(${tiltX}deg) rotateY(${tiltY}deg) skewX(${skX}deg) scale(${stretch})`
+        el.style.color = m > 1 ? '#FFFE1E' : '#F5F5F5'
+      })
+
+      rafRef.current = requestAnimationFrame(loop)
+    }
+
+    const taraf = () => {
+      charRefs.current.forEach((el) => {
+        if (!el) return
+        el.style.transition = 'transform 0.12s ease, color 0.12s'
+        el.style.transform = ''
+        el.style.color = ''
+      })
+    }
+
+    window.addEventListener('pointermove', onMove)
+    rafRef.current = requestAnimationFrame(loop)
+    return () => {
+      window.removeEventListener('pointermove', onMove)
+      cancelAnimationFrame(rafRef.current)
+      momentum.current.x = momentum.current.y = 0
+      taraf()
+    }
+  }, [revealed])
+
+  return (
+    <h1
+      className={`display-font name-container glow-name ${revealed ? 'kinematized' : ''}`}
+      style={{
+        fontSize: 'clamp(2.8rem, 9vw, 8.5rem)',
+        lineHeight: 1,
+        color: '#F5F5F5',
+        marginBottom: '1.4rem',
+        letterSpacing: '0.01em',
+        whiteSpace: 'nowrap',
+        willChange: 'transform',
+      }}
+    >
+      {text.split('').map((char, i) => (
+        <span
+          key={i}
+          ref={(el) => { charRefs.current[i] = el }}
+          className="film-char"
+          style={{
+            animationDelay: `${i * 45}ms`,
+            display: 'inline-block',
+            width: char === ' ' ? '0.34em' : undefined,
+            willChange: 'transform, color',
+          }}
+        >
+          {char === ' ' ? '\u00A0' : char}
+        </span>
+      ))}
+    </h1>
   )
 }
 
