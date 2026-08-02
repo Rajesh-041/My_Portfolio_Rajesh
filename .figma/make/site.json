@@ -1,0 +1,10 @@
+{
+  "description": "Transform your portfolio into a cinematic experience, showcasing your engineering journey through engaging storytelling and immersive visuals.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

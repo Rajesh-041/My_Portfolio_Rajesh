@@ -1,0 +1,395 @@
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Dancing+Script:wght@600;700&family=Inter:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Space+Grotesk:wght@400;500;600&display=swap');
+@import 'tailwindcss';
+
+/* ── Keyframes ─────────────────────────────────────────────────────────── */
+
+@keyframes grain {
+  0%,100% { transform:translate(0,0) }
+  10%     { transform:translate(-5%,-10%) }
+  20%     { transform:translate(-15%,5%) }
+  30%     { transform:translate(7%,-25%) }
+  40%     { transform:translate(-5%,25%) }
+  50%     { transform:translate(-15%,10%) }
+  60%     { transform:translate(15%,0%) }
+  70%     { transform:translate(0%,15%) }
+  80%     { transform:translate(3%,35%) }
+  90%     { transform:translate(-10%,10%) }
+}
+
+@keyframes flicker {
+  0%   { opacity:0 }
+  5%   { opacity:0.85 }
+  8%   { opacity:0 }
+  12%  { opacity:0.95 }
+  15%  { opacity:0.05 }
+  18%  { opacity:1 }
+  22%  { opacity:0.3 }
+  25%  { opacity:0.9 }
+  30%  { opacity:0.6 }
+  35%  { opacity:1 }
+  45%  { opacity:0.9 }
+  55%  { opacity:1 }
+  65%  { opacity:0.95 }
+  100% { opacity:1 }
+}
+
+@keyframes charReveal {
+  from { opacity:0; transform:translateY(80px) rotateX(-40deg); }
+  to   { opacity:1; transform:translateY(0) rotateX(0deg); }
+}
+
+@keyframes fadeUpIn {
+  from { opacity:0; transform:translateY(40px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity:0; }
+  to   { opacity:1; }
+}
+
+@keyframes glowPulse {
+  0%,100% { text-shadow:0 0 20px #FFFE1E44, 0 0 60px #FFFE1E11; }
+  50%     { text-shadow:0 0 40px #FFFE1E99, 0 0 80px #FFFE1E44, 0 0 120px #FFFE1E22; }
+}
+
+@keyframes scrollBounce {
+  0%,100% { transform:translateY(0); }
+  50%     { transform:translateY(10px); }
+}
+
+@keyframes drawPath {
+  from { stroke-dashoffset:2000; }
+  to   { stroke-dashoffset:0; }
+}
+
+@keyframes lightLeak {
+  0%   { opacity:0; transform:translateX(-100%) skewX(-10deg); }
+  25%  { opacity:0.5; }
+  75%  { opacity:0.2; }
+  100% { opacity:0; transform:translateX(200%) skewX(-10deg); }
+}
+
+@keyframes marquee {
+  from { transform:translateX(0); }
+  to   { transform:translateX(-50%); }
+}
+
+@keyframes clipReveal {
+  from { clip-path:inset(0 100% 0 0); }
+  to   { clip-path:inset(0 0% 0 0); }
+}
+
+@keyframes scanline {
+  from { transform:translateY(-100%); }
+  to   { transform:translateY(100vh); }
+}
+
+/* ── Global ─────────────────────────────────────────────────────────────── */
+
+html { scroll-behavior:smooth; }
+
+body {
+  background-color:#0A0A0A;
+  color:#B8B8B8;
+  font-family:'Inter', sans-serif;
+  overflow-x:hidden;
+  cursor:none;
+}
+
+/* WebGL cinematic background — fixed behind all scene layers */
+.cinematic-canvas {
+  position:fixed;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+}
+.cinematic-canvas canvas {
+  display:block;
+  width:100%;
+  height:100%;
+}
+main { position:relative; z-index:1; }
+
+* { scrollbar-width:none; -ms-overflow-style:none; }
+*::-webkit-scrollbar { display:none; }
+
+/* perspective for 3D char reveal */
+.name-container { perspective:600px; }
+
+.film-char {
+  display:inline-block;
+  opacity:0;
+  animation:charReveal 0.6s cubic-bezier(0.22,1,0.36,1) forwards;
+  transform-origin:bottom center;
+}
+
+.glow-name {
+  animation:glowPulse 3s ease-in-out infinite;
+}
+
+/* Once kinetic distortion is live, hand transform control to inline styles */
+.kinematized .film-char {
+  animation:none !important;
+  opacity:1;
+}
+
+.scroll-bounce {
+  animation:scrollBounce 2s ease-in-out infinite;
+}
+
+.grain-svg {
+  position:fixed;
+  top:-50%;
+  left:-50%;
+  width:200%;
+  height:200%;
+  pointer-events:none;
+  z-index:900;
+  opacity:0.035;
+  mix-blend-mode:overlay;
+  animation:grain 0.35s steps(1) infinite;
+}
+
+.vignette {
+  position:fixed;
+  inset:0;
+  background:radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.85) 100%);
+  pointer-events:none;
+  z-index:800;
+}
+
+.custom-cursor {
+  position:fixed;
+  width:12px;
+  height:12px;
+  border-radius:50%;
+  background:#FFFE1E;
+  mix-blend-mode:difference;
+  pointer-events:none;
+  z-index:9999;
+  transform:translate(-50%,-50%);
+  transition:width 0.2s, height 0.2s;
+}
+
+.custom-cursor.large {
+  width:40px;
+  height:40px;
+}
+
+.cursor-ring {
+  position:fixed;
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  border:1px solid rgba(255,254,30,0.4);
+  pointer-events:none;
+  z-index:9998;
+  transform:translate(-50%,-50%);
+  transition:transform 0.1s linear, width 0.2s, height 0.2s;
+}
+
+/* Section reveal */
+.reveal {
+  opacity:0;
+  transform:translateY(50px);
+  transition:opacity 0.8s cubic-bezier(0.22,1,0.36,1), transform 0.8s cubic-bezier(0.22,1,0.36,1);
+}
+
+.reveal.in-view {
+  opacity:1;
+  transform:translateY(0);
+}
+
+.reveal-delay-1 { transition-delay:0.1s; }
+.reveal-delay-2 { transition-delay:0.2s; }
+.reveal-delay-3 { transition-delay:0.3s; }
+.reveal-delay-4 { transition-delay:0.4s; }
+.reveal-delay-5 { transition-delay:0.5s; }
+.reveal-delay-6 { transition-delay:0.6s; }
+
+.clip-reveal {
+  opacity:0;
+  clip-path:inset(0 100% 0 0);
+  transition:opacity 0.1s, clip-path 1s cubic-bezier(0.22,1,0.36,1);
+}
+.clip-reveal.in-view {
+  opacity:1;
+  clip-path:inset(0 0% 0 0);
+}
+
+/* Timeline SVG path */
+.timeline-path {
+  stroke-dasharray:2000;
+  stroke-dashoffset:2000;
+  transition:stroke-dashoffset 2s cubic-bezier(0.22,1,0.36,1);
+}
+.timeline-path.in-view {
+  stroke-dashoffset:0;
+}
+
+/* Progress bars */
+.progress-bar {
+  height:2px;
+  background:#FFFE1E;
+  width:0;
+  transition:width 1.2s cubic-bezier(0.22,1,0.36,1);
+  transition-delay:var(--delay, 0s);
+}
+.progress-bar.in-view {
+  width:var(--w, 0%);
+}
+
+/* Heatmap cells */
+.heatmap-cell {
+  opacity:0;
+  transform:scale(0.3);
+  transition:opacity 0.3s ease, transform 0.3s ease;
+  transition-delay:var(--cell-delay, 0s);
+}
+.heatmap-cell.in-view {
+  opacity:var(--cell-intensity, 0.1);
+  transform:scale(1);
+}
+
+/* Magnetic button */
+.magnetic-btn {
+  transition:transform 0.2s cubic-bezier(0.22,1,0.36,1);
+  display:inline-block;
+}
+
+/* Chapter labels */
+.chapter-label {
+  font-family:'Dancing Script', cursive;
+  font-style:italic;
+}
+
+/* Anton for display */
+.display-font {
+  font-family:'Anton', sans-serif;
+  font-weight:400;
+  letter-spacing:0.02em;
+}
+
+/* Flicker intro */
+.flicker-in {
+  animation:flicker 1.8s ease-out forwards;
+}
+
+/* Light leak */
+.light-leak {
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  bottom:0;
+  background:linear-gradient(105deg, transparent 30%, rgba(255,254,30,0.15) 50%, transparent 70%);
+  pointer-events:none;
+  animation:lightLeak 1.5s ease-in-out forwards;
+  animation-delay:1.8s;
+}
+
+/* Marquee ticker */
+.marquee-track {
+  display:flex;
+  gap:3rem;
+  animation:marquee 25s linear infinite;
+  width:max-content;
+}
+
+/* ── Cinematic 3D Motion System ─────────────────────────────────────────── */
+
+/* 3D helpers */
+.perspective-3d { perspective:1200px; }
+.preserve-3d { transform-style:preserve-3d; }
+.will-3d { will-change:transform; }
+.rotateX-45 { transform:rotateX(45deg); }
+
+/* Layered drift (props suspended on set) */
+@keyframes floaty {
+  0%,100% { transform:translate3d(0,0,0); }
+  50%     { transform:translate3d(0,-14px,0); }
+}
+.float-slow { animation:floaty 6s ease-in-out infinite; }
+.float-med  { animation:floaty 4.5s ease-in-out infinite; }
+.float-fast  { animation:floaty 3.2s ease-in-out infinite; }
+.float-delay-1 { animation-delay:-1.5s; }
+.float-delay-2 { animation-delay:-3s; }
+.float-delay-3 { animation-delay:0.8s; }
+
+/* Edge-glow sweep on hover (accent supplied inline) */
+.card-edge {
+  position:relative;
+  transition:transform 0.45s cubic-bezier(0.22,1,0.36,1), box-shadow 0.45s ease;
+  transform-style:preserve-3d;
+}
+.card-edge::after {
+  content:'';
+  position:absolute;
+  inset:-1px;
+  border-radius:inherit;
+  padding:1px;
+  background:var(--edge-glow, #FFFE1E80);
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;
+  mask-composite:exclude;
+  opacity:0;
+  transition:opacity 0.45s ease;
+  pointer-events:none;
+}
+.card-edge:hover { box-shadow:0 24px 60px -20px rgba(0,0,0,0.6); }
+.card-edge:hover::after { opacity:1; }
+
+/* Letterbox cinematic bars on section entry */
+@keyframes letterboxOpen {
+  from { transform:scaleY(1); }
+  to   { transform:scaleY(0); }
+}
+.letterbox {
+  position:fixed;
+  left:0; right:0;
+  height:9vh;
+  background:#000;
+  z-index:700;
+  pointer-events:none;
+  animation:letterboxOpen 0.9s cubic-bezier(0.22,1,0.36,1) forwards;
+}
+.letterbox-top { top:0; transform-origin:top; }
+.letterbox-bottom { bottom:0; transform-origin:bottom; }
+
+/* Film frame sprocket holes (Analog dream / film reel) */
+.sprocket {
+  position:absolute;
+  top:50%;
+  width:6px; height:24px;
+  background:rgba(255,255,255,0.05);
+  border-radius:3px;
+  transform:translateY(-50%);
+}
+.sprocket-left { left:-3px; }
+.sprocket-right { right:-3px; }
+
+/* Scanline sweep for sci-fi accent */
+@keyframes sweep {
+  from { transform:translateX(-120%) skewX(-20deg); }
+  to   { transform:translateX(220%) skewX(-20deg); }
+}
+.glow-sweep {
+  position:absolute;
+  top:0; bottom:0;
+  width:40%;
+  background:linear-gradient(90deg, transparent, var(--sweep, rgba(62,142,247,0.10)), transparent);
+  pointer-events:none;
+  animation:sweep 6s linear infinite;
+}
+
+/* Reduced motion — respect user preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration:0.001ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:0.001ms !important;
+    scroll-behavior:auto !important;
+  }
+  .float-slow, .float-med, .float-fast { animation:none !important; }
+}
