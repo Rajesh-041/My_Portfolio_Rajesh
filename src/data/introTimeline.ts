@@ -4,7 +4,7 @@ export const TOTAL_MS = 21500
 
 export const TEXT_LINES = [
   { id: 1, text: 'A Story Beyond Code.', from: 0, to: 2800, style: 'glow' },
-  { id: 2, text: 'Where curiosity meets me...', from: 2800, to: 5200, style: 'glow' },
+  { id: 2, text: 'Directed by CURIOUSITY', from: 2800, to: 5200, style: 'glow' },
   { id: 3, text: "I don't just build websites...", from: 5200, to: 7800, style: 'glow' },
   { id: 4, text: 'I direct digital experiences.', from: 7800, to: 10400, style: 'glow' },
   { id: 5, text: 'They call me...', from: 10400, to: 12000, style: 'glow' },
