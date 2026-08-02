@@ -370,9 +370,9 @@ main { position:relative; z-index:1; }
 .sprocket-right { right:-3px; }
 
 /* Scanline sweep for sci-fi accent */
-@keyframes sweep {
-  from { transform:translateX(-120%) skewX(-20deg); }
-  to   { transform:translateX(220%) skewX(-20deg); }
+@keyframes pulse-ring {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.05); opacity: 0.2; }
 }
 .glow-sweep {
   position:absolute;
