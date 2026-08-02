@@ -21,8 +21,8 @@ const STYLE_MAP: Record<
     glow: '0 0 18px rgba(255,255,255,0.6), 0 0 60px rgba(180,220,255,0.45)',
   },
   muted: {
-    color: '#4B5563',
-    weight: 400,
+    color: '#000000',
+    weight: 700,
     size: 'clamp(0.95rem, 2vw, 1.3rem)',
     glow: 'none',
   },
